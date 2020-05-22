@@ -33,7 +33,8 @@ describe('Test routes', () => {
         });
     });
 
-    it('POST / Bookmark field(s) missing', (done) => {
+    // POST si un champs est manquant
+    it('POST / NO - Bookmark field(s) missing', (done) => {
         request(app)
         .post('/bookmark')
         .send({})
@@ -46,17 +47,54 @@ describe('Test routes', () => {
         });
     });
 
-    it('POST / Bookmark test passed', (done) => {
+    // POST si tout est ok
+    it('POST / OK - Bookmark test passed', (done) => {
         request(app)
         .post('/bookmark')
-        .send({ url: 'https://jestjs.io', title: 'Jest' })
+        .send({ url: 'https://nodejs.org/', title: 'Node.js' })
         .expect(201)
         .expect('Content-Type', /json/)
         .then(res => {
             // on test la valeur passée dans l'id, peut importe la valeur de type "Number"
-            const expected = { id: expect.any(Number), url: 'https://jestjs.io', title: 'Jest' };
+            const expected = { id: expect.any(Number), url: 'https://nodejs.org/', title: 'Node.js' };
             expect(res.body).toEqual(expected);
             done();
+        });
+    });
+
+    describe('GET /bookmark/:id', () => {
+        const testBookmark = { url: 'https://nodejs.org/', title: 'Node.js' };
+        beforeEach((done) => connection.query(
+            'TRUNCATE bookmark', () => connection.query(
+                'INSERT INTO bookmark SET ?', testBookmark, done
+            )
+        ));
+                
+        // Write your tests HERE!
+        it('GET / NO - bookmark is not found', (done) => {
+            request(app)
+            .get('/bookmark/:id')
+            .send({})
+            .expect(404)
+            .expect('Content-Type', /json/)
+            .then(response => {
+                const expected = { error: 'Bookmark not found' };
+                expect(response.body).toEqual(expected);
+                done();
+            });
+        });
+
+        it('GET / OK - bookmark is found', (done) => {
+            request(app)
+            .get('/bookmark/1')
+            .send(testBookmark)
+            .expect(200)
+            .expect('Content-Type', /json/)
+            .then(response => {
+                const expected = { id: 1, url: 'https://nodejs.org/', title: 'Node.js' };
+                expect(response.body).toEqual(expected);
+                done();
+            });
         });
     });
 });

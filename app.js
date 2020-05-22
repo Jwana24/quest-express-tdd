@@ -8,9 +8,28 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// GET
+// GET ALL
 app.get('/', (req, res) => {
     res.status(200).json({message: "Hello World!"});
+});
+
+// GET ONE
+app.get('/bookmark/:id', (req, res) => {
+    const idBookmark = req.params.id;
+    connection.query('SELECT * FROM bookmark WHERE id = ?', [idBookmark], (err, results) => {
+        if(err){
+            res.status(500).json({
+                error: err.message,
+                sql: err.sql
+            });
+        }
+        else if(results.length === 0){
+            res.status(404).json({ "error": "Bookmark not found" });
+        }
+        else{
+            res.status(200).json(results[0]);
+        }
+    });
 });
 
 // POST
@@ -42,7 +61,7 @@ app.post('/bookmark', (req, res) => {
                 }
             });
         }
-    })
+    });
 });
 
 module.exports = app;
